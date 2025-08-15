@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Tree Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .tree-visualization {
+            margin-top: 1rem;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌳 Binary Search Tree Builder</h1>
+    <p class="description">
+        Enter a series of numbers separated by commas or spaces to build a binary search tree.
+        The tree will be constructed by inserting numbers sequentially, with no duplicates allowed.
+    </p>
+
+    <form id="numberForm">
+        <div class="input-group">
+            <label for="numbers">Enter Numbers:</label>
+            <input
+                    type="text"
+                    id="numbers"
+                    name="numbers"
+                    placeholder="e.g., 5, 3, 7, 2, 4, 6, 8"
+                    required
+            >
+        </div>
+
+        <div class="buttons">
+            <button type="submit" class="btn-primary">
+                🔨 Build Tree
+            </button>
+            <button type="button" class="btn-secondary" onclick="showPreviousTrees()">
+                📚 Show Previous Trees
+            </button>
+        </div>
+    </form>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Building your tree...</p>
+    </div>
+
+    <div class="result" id="result">
+        <h3>Tree Created Successfully!</h3>
+        <div id="treeInfo"></div>
+        <div class="tree-visualization" id="treeVisualization"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('numberForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const numbers = document.getElementById('numbers').value.trim();
+        if (!numbers) {
+            showError('Please enter some numbers');
+            return;
+        }
+
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('result').style.display = 'none';
+
+
+        const formData = new FormData();
+        formData.append('numbers', numbers);
+
+
+        fetch('/process-numbers', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading').style.display = 'none';
+
+            if (data.success) {
+                showSuccess(data);
+            } else {
+                showError(data.error || 'An error occurred while processing numbers');
+            }
+        })
+        .catch(error => {
+            document.getElementById('loading').style.display = 'none';
+            showError('Network error: ' + error.message);
+        });
+    });
+
+    function showSuccess(data) {
+        const resultDiv = document.getElementById('result');
+        const treeInfo = document.getElementById('treeInfo');
+        const treeVisualization = document.getElementById('treeVisualization');
+
+        treeInfo.innerHTML = `
+            <p><strong>Input Numbers:</strong> ${data.inputNumbers.join(', ')}</p>
+            <p><strong>Tree ID:</strong> ${data.id}</p>
+        `;
+
+        // Try to visualize the tree structure
+        try {
+            const tree = JSON.parse(data.tree);
+            treeVisualization.textContent = visualizeTree(tree);
+        } catch (e) {
+            treeVisualization.textContent = data.tree;
+        }
+
+        resultDiv.className = 'result success';
+        resultDiv.style.display = 'block';
+    }
+
+    function showError(message) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `<h3>Error</h3><p>${message}</p>`;
+        resultDiv.className = 'result error';
+        resultDiv.style.display = 'block';
+    }
+
+    function visualizeTree(node, prefix = '', isLast = true) {
+        if (!node) return '';
+
+        let result = prefix + (isLast ? '└── ' : '├── ') + node.value + '\n';
+
+        const children = [];
+        if (node.left) children.push({ node: node.left, isLeft: true });
+        if (node.right) children.push({ node: node.right, isLeft: false });
+
+        children.forEach((child, index) => {
+            const isLastChild = index === children.length - 1;
+            const newPrefix = prefix + (isLast ? '    ' : '│   ');
+            result += visualizeTree(child.node, newPrefix, isLastChild);
+        });
+
+        return result;
+    }
+
+    function showPreviousTrees() {
+        window.location.href = '/previous-trees-page';
+    }
+</script>
+</body>
+</html>
