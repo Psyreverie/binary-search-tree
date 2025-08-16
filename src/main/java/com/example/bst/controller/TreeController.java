@@ -47,7 +47,7 @@ public class TreeController {
         return service.getAllTrees();
     }
 
-    // Additional endpoints for the previous-trees.html functionality
+
     @DeleteMapping("/api/previous-trees/{id}")
     @ResponseBody
     public Map<String, Object> deleteTree(@PathVariable Long id) {
