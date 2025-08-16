@@ -1,3 +1,693 @@
-<body onload="loadPreviousTrees()">
-<div id="tree-list"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous Trees - Binary Search Tree</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .navigation {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .nav-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-trees {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .no-trees .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-trees h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .no-trees p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .tree-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .tree-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: cardFadeIn 0.6s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tree-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .tree-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .tree-id {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .tree-input {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .tree-body {
+            padding: 1.5rem;
+        }
+
+        .tree-structure {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tree-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .expand-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .tree-structure.collapsed {
+            max-height: 150px;
+            position: relative;
+        }
+
+        .tree-structure.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(transparent, #2d3748);
+            pointer-events: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .tree-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-button {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <span class="emoji">📚</span>
+        <h1>Previous Binary Search Trees</h1>
+        <p style="color: #666; margin-top: 1rem;">
+            View and manage all your previously created binary search trees
+        </p>
+
+        <div class="navigation">
+            <a href="/enter-numbers" class="nav-button btn-primary">
+                🔨 Create New Tree
+            </a>
+            <a href="/" class="nav-button btn-secondary">
+                🏠 Home
+            </a>
+            <button onclick="clearAllTrees()" class="nav-button btn-danger">
+                🗑️ Clear All Trees
+            </button>
+            <button onclick="loadTrees()" class="nav-button btn-secondary">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+        <h3 style="color: #333; margin-bottom: 1rem;">📊 Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="totalTrees">0</div>
+                <div class="stat-label">Total Trees</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalNodes">0</div>
+                <div class="stat-label">Total Nodes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="avgHeight">0</div>
+                <div class="stat-label">Avg Height</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Loading your trees...</p>
+    </div>
+
+    <div class="error-message" id="error" style="display: none;">
+        <strong>Error:</strong> <span id="errorMessage"></span>
+    </div>
+
+    <div class="no-trees" id="noTrees" style="display: none;">
+        <div class="emoji">🌱</div>
+        <h3>No Trees Found</h3>
+        <p>You haven't created any binary search trees yet.</p>
+        <a href="/enter-numbers" class="nav-button btn-primary">
+            🚀 Create Your First Tree
+        </a>
+    </div>
+
+    <div class="tree-grid" id="treeGrid"></div>
+</div>
+
+<script>
+    let trees = [];
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTrees();
+    });
+
+    async function loadTrees() {
+        showLoading();
+        hideError();
+
+        try {
+            const response = await fetch('/previous-trees');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            trees = await response.json();
+            console.log('Loaded trees:', trees);
+
+            hideLoading();
+            displayTrees();
+            updateStats();
+
+        } catch (error) {
+            console.error('Error loading trees:', error);
+            hideLoading();
+            showError('Failed to load trees: ' + error.message);
+        }
+    }
+
+    function displayTrees() {
+        const treeGrid = document.getElementById('treeGrid');
+        const noTrees = document.getElementById('noTrees');
+        const stats = document.getElementById('stats');
+
+        if (!trees || trees.length === 0) {
+            treeGrid.innerHTML = '';
+            noTrees.style.display = 'block';
+            stats.style.display = 'none';
+            return;
+        }
+
+        noTrees.style.display = 'none';
+        stats.style.display = 'block';
+
+        treeGrid.innerHTML = trees.map((tree, index) => `
+            <div class="tree-card" style="animation-delay: ${index * 0.1}s">
+                <div class="tree-header">
+                    <div class="tree-id">Tree #${tree.id}</div>
+                    <div class="tree-input">${formatInputNumbers(tree.inputNumbers)}</div>
+                </div>
+                <div class="tree-body">
+                    <div class="tree-structure collapsed" id="tree-${tree.id}">
+                        ${formatTreeStructure(tree.treeJson)}
+                    </div>
+                    <div class="tree-actions">
+                        <button class="expand-btn" onclick="toggleExpand(${tree.id})">
+                            📖 Expand/Collapse
+                        </button>
+                        <div>
+                            <button class="expand-btn" onclick="copyTree(${tree.id})" title="Copy JSON">
+                                📋 Copy
+                            </button>
+                            <button class="delete-btn" onclick="deleteTree(${tree.id})" title="Delete Tree">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function formatInputNumbers(inputNumbers) {
+        // Remove brackets and clean up the string
+        return inputNumbers.replace(/[\[\]]/g, '').trim();
+    }
+
+    function formatTreeStructure(treeJson) {
+        try {
+            const tree = JSON.parse(treeJson);
+            return visualizeTree(tree) + '\n\nJSON Structure:\n' + JSON.stringify(tree, null, 2);
+        } catch (e) {
+            return treeJson;
+        }
+    }
+
+    function visualizeTree(node, prefix = '', isLast = true, isRoot = false) {
+        if (!node) return '';
+
+        let result = '';
+        if (isRoot) {
+            result = `Root: ${node.value}\n`;
+        } else {
+            result = prefix + (isLast ? '└── ' : '├── ') + node.value + '\n';
+        }
+
+        const children = [];
+        if (node.left) children.push({ node: node.left, isLeft: true });
+        if (node.right) children.push({ node: node.right, isLeft: false });
+
+        children.forEach((child, index) => {
+            const isLastChild = index === children.length - 1;
+            const newPrefix = prefix + (isRoot ? '' : (isLast ? '    ' : '│   '));
+            result += visualizeTree(child.node, newPrefix, isLastChild, false);
+        });
+
+        return result;
+    }
+
+    function toggleExpand(treeId) {
+        const element = document.getElementById(`tree-${treeId}`);
+        element.classList.toggle('collapsed');
+    }
+
+    async function copyTree(treeId) {
+        const tree = trees.find(t => t.id === treeId);
+        if (tree) {
+            try {
+                await navigator.clipboard.writeText(tree.treeJson);
+                showTemporaryMessage('Tree JSON copied to clipboard!', 'success');
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                showTemporaryMessage('Failed to copy to clipboard', 'error');
+            }
+        }
+    }
+
+    async function deleteTree(treeId) {
+        if (!confirm('Are you sure you want to delete this tree?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/previous-trees/${treeId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                trees = trees.filter(t => t.id !== treeId);
+                displayTrees();
+                updateStats();
+                showTemporaryMessage('Tree deleted successfully!', 'success');
+            } else {
+                throw new Error('Failed to delete tree');
+            }
+        } catch (error) {
+            console.error('Error deleting tree:', error);
+            showTemporaryMessage('Failed to delete tree: ' + error.message, 'error');
+        }
+    }
+
+    async function clearAllTrees() {
+        if (!confirm('Are you sure you want to delete ALL trees? This cannot be undone!')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/previous-trees', {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                trees = [];
+                displayTrees();
+                updateStats();
+                showTemporaryMessage('All trees cleared successfully!', 'success');
+            } else {
+                throw new Error('Failed to clear all trees');
+            }
+        } catch (error) {
+            console.error('Error clearing trees:', error);
+            showTemporaryMessage('Failed to clear trees: ' + error.message, 'error');
+        }
+    }
+
+    function updateStats() {
+        if (!trees || trees.length === 0) return;
+
+        let totalNodes = 0;
+        let totalHeight = 0;
+
+        trees.forEach(tree => {
+            try {
+                const treeObj = JSON.parse(tree.treeJson);
+                totalNodes += countNodes(treeObj);
+                totalHeight += getHeight(treeObj);
+            } catch (e) {
+                console.error('Error parsing tree:', e);
+            }
+        });
+
+        document.getElementById('totalTrees').textContent = trees.length;
+        document.getElementById('totalNodes').textContent = totalNodes;
+        document.getElementById('avgHeight').textContent = trees.length > 0 ? Math.round(totalHeight / trees.length) : 0;
+    }
+
+    function countNodes(node) {
+        if (!node) return 0;
+        return 1 + countNodes(node.left) + countNodes(node.right);
+    }
+
+    function getHeight(node) {
+        if (!node) return 0;
+        return 1 + Math.max(getHeight(node.left), getHeight(node.right));
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('treeGrid').innerHTML = '';
+        document.getElementById('noTrees').style.display = 'none';
+        document.getElementById('stats').style.display = 'none';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('error').style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
+
+    function showTemporaryMessage(message, type) {
+        // Create a temporary notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            ${type === 'success' ? 'background: #28a745;' : 'background: #dc3545;'}
+        `;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
 </body>
+</html>

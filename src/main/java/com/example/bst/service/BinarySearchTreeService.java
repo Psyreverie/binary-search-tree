@@ -22,7 +22,6 @@ public class BinarySearchTreeService {
         this.objectMapper = objectMapper;
     }
 
-
     public Map<String, Object> createAndStoreTree(String numbersInput) {
         try {
             List<Integer> numbers = parseInput(numbersInput);
@@ -58,6 +57,14 @@ public class BinarySearchTreeService {
 
     public List<TreeRecord> getAllTrees() {
         return repository.findAll();
+    }
+
+    public void deleteTree(Long id) {
+        repository.deleteById(id);
+    }
+
+    public void deleteAllTrees() {
+        repository.deleteAll();
     }
 
     public List<Integer> parseInput(String input) {
